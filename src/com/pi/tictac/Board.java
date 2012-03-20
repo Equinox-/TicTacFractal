@@ -39,8 +39,8 @@ public class Board implements Renderable {
 
     @Override
     public void compile(Rectangle r) {
-	this.x = r.x;
-	this.y = r.y;
+	x = r.x;
+	y = r.y;
 	width = r.width;
 	height = r.height;
 	tileWidth = r.width / BOARD_SIZE;
@@ -66,28 +66,30 @@ public class Board implements Renderable {
     }
 
     @Override
-    public void render(Graphics2D g) {
-	renderGamingGraphics(g);
+    public void render(Graphics2D g, Rectangle clip) {
+	renderGamingGraphics(g, clip);
 	if (getWinState()) {
 	    renderWinningGraphics(g);
 	}
     }
 
-    public void renderGamingGraphics(Graphics2D g) {
+    public void renderGamingGraphics(Graphics2D g, Rectangle clip) {
 	for (int x = 0; x < BOARD_SIZE; x++) {
 	    int tileX = this.x + (tileWidth * x);
+	    g.setColor(Color.RED);
 	    if (x > 0) {
 		g.setColor(Color.BLACK);
 		g.drawLine(tileX, this.y, tileX, this.y + this.height);
 	    }
 	    for (int y = 0; y < BOARD_SIZE; y++) {
-		int tileY = this.y + (tileHeight * y);
+		Rectangle tile = getTileBounds(x, y);
 		if (y > 0) {
 		    g.setColor(Color.BLACK);
-		    g.drawLine(this.x, tileY, this.x + this.width, tileY);
+		    g.drawLine(this.x, tile.y, this.x + this.width, tile.y);
 		}
-		if (board[x][y] != null) {
-		    board[x][y].render(g);
+		if (board[x][y] != null && tile.intersects(clip)
+			&& tile.width > 3 && tile.height > 3) {
+		    board[x][y].render(g, clip);
 		}
 	    }
 	}
@@ -183,15 +185,15 @@ public class Board implements Renderable {
 	}
 	return false;
     }
-    
-    public void clear(){
+
+    public void clear() {
 	upLeftDiagWin = false;
 	upRightDiagWin = false;
 	verticalWin = false;
 	horizontalWin = false;
 	winner = null;
-	for (int x =0; x<BOARD_SIZE; x++){
-	    for (int y = 0;y< BOARD_SIZE; y++){
+	for (int x = 0; x < BOARD_SIZE; x++) {
+	    for (int y = 0; y < BOARD_SIZE; y++) {
 		board[x][y] = null;
 	    }
 	}

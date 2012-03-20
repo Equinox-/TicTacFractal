@@ -6,5 +6,5 @@ import java.awt.Rectangle;
 public interface Renderable {
     public void compile(Rectangle r);
 
-    public void render(Graphics2D g);
+    public void render(Graphics2D g, Rectangle clip);
 }

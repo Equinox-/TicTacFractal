@@ -38,7 +38,7 @@ public class Player implements Renderable {
     }
 
     @Override
-    public void render(Graphics2D g) {
+    public void render(Graphics2D g, Rectangle clip) {
 	g.setColor(player.color());
 	g.fillOval(x, y, width, height);
     }

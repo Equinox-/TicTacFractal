@@ -11,7 +11,7 @@ public class BoardViewerFrame extends JFrame {
 
     public BoardViewerFrame() {
 	super("Tic Tac Fractal");
-	setSize(1000, 1000);
+	setSize(500,500);
 	setLocation(0, 0);
 	setVisible(true);
 	viewer = new BoardViewer();

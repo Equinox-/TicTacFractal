@@ -89,13 +89,14 @@ public class BoardViewer extends Canvas {
 	mouseWheelAdapter = new MouseWheelListener() {
 	    @Override
 	    public void mouseWheelMoved(MouseWheelEvent e) {
+		Point cW = screenToWorld(e.getX(), e.getY());
 		zoom -= (float) (e.getScrollAmount() * e.getWheelRotation())
-			* .003f * zoom;
-		/*
-		 * Point world = screenToWorld(e.getX(), e.getY()); ulX =
-		 * world.x - Math.round(getWidth() / 2f / zoom); ulY = world.y -
-		 * Math.round(getHeight() / 2f / zoom);
-		 */
+			* .05f * zoom;
+		Point nW = screenToWorld(e.getX(), e.getY());
+		ulX += cW.x - nW.x;
+		ulY += cW.y - nW.y;
+		System.out.println(cW.toString() + "\t"
+			+ screenToWorld(e.getX(), e.getY()).toString());
 		compileBoard();
 		render();
 	    }
@@ -107,11 +108,8 @@ public class BoardViewer extends Canvas {
 			&& cacheULY != Integer.MAX_VALUE) {
 		    if (dragStart == null)
 			dragStart = e.getPoint();
-		    ulX = cacheULX;
-		    ulY = cacheULY;
-		    Point world = screenToWorld(e.getX(), e.getY());
-		    ulX = world.x - Math.round(getWidth() / 2f / zoom);
-		    ulY = world.y - Math.round(getHeight() / 2f / zoom);
+		    ulX = cacheULX + dragStart.x - e.getX();
+		    ulY = cacheULY + dragStart.y - e.getY();
 		    compileBoard();
 		    render();
 		}
@@ -124,24 +122,20 @@ public class BoardViewer extends Canvas {
 	};
 
 	keyAdapter = new KeyAdapter() {
-	    boolean trigger = false;
 
 	    @Override
-	    public void keyPressed(KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_C && !trigger) {
-		    trigger = true;
+	    public void keyTyped(KeyEvent e) {
+		if (e.getKeyChar() == 'c') {
 		    Point world = screenToWorld(mouse.x, mouse.y);
 		    ulX = world.x - Math.round(getWidth() / 2f / zoom);
 		    ulY = world.y - Math.round(getHeight() / 2f / zoom);
 		    compileBoard();
 		    render();
-		}
-	    }
-
-	    @Override
-	    public void keyReleased(KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_C) {
-		    trigger = false;
+		} else if (e.getKeyChar() == 'x') {
+		    ulX = 0;
+		    ulY = 0;
+		    compileBoard();
+		    render();
 		}
 	    }
 	};

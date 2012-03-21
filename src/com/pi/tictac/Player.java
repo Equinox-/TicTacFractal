@@ -2,7 +2,6 @@ package com.pi.tictac;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 
 public class Player implements Renderable {
     public static enum PlayerType {
@@ -19,7 +18,7 @@ public class Player implements Renderable {
     }
 
     private PlayerType player;
-    private int x, y, width, height;
+    private double x, y, width, height;
 
     public Player(PlayerType type) {
 	this.player = type;
@@ -30,7 +29,7 @@ public class Player implements Renderable {
     }
 
     @Override
-    public void compile(Rectangle r) {
+    public void compile(BigRectangle r) {
 	x = r.x + 2;
 	y = r.y + 2;
 	width = r.width - 4;
@@ -38,8 +37,8 @@ public class Player implements Renderable {
     }
 
     @Override
-    public void render(Graphics2D g, Rectangle clip) {
+    public void render(Graphics2D g, BigRectangle clip) {
 	g.setColor(player.color());
-	g.fillOval(x, y, width, height);
+	g.fillOval((int) x, (int) y, (int) width, (int) height);
     }
 }

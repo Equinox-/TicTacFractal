@@ -4,7 +4,6 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -18,6 +17,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 
 import com.pi.tictac.Player.PlayerType;
@@ -33,11 +33,12 @@ public class BoardViewer extends Canvas {
     private MouseWheelListener mouseWheelAdapter;
     private KeyListener keyAdapter;
 
-    private int ulX = 0, ulY = 0;
-    private int cacheULX = Integer.MAX_VALUE, cacheULY = Integer.MAX_VALUE;
-    private float zoom = 1;
+    private double ulX = 0, ulY = 0;
+    private double cacheULX = Double.MAX_VALUE, cacheULY = Double.MAX_VALUE;
+    private double zoom = 1;
+
     private Point mouse = new Point(-1, -1);
-    private Point dragStart = null;
+    private Point2D dragStart = null;
 
     public BoardViewer() {
 	board = new Board();
@@ -60,8 +61,8 @@ public class BoardViewer extends Canvas {
 	    @Override
 	    public void mouseReleased(MouseEvent e) {
 		trigger = false;
-		cacheULX = Integer.MAX_VALUE;
-		cacheULY = Integer.MAX_VALUE;
+		cacheULX = Double.MAX_VALUE;
+		cacheULY = Double.MAX_VALUE;
 		dragStart = null;
 	    }
 
@@ -89,14 +90,12 @@ public class BoardViewer extends Canvas {
 	mouseWheelAdapter = new MouseWheelListener() {
 	    @Override
 	    public void mouseWheelMoved(MouseWheelEvent e) {
-		Point cW = screenToWorld(e.getX(), e.getY());
-		zoom -= (float) (e.getScrollAmount() * e.getWheelRotation())
-			* .05f * zoom;
-		Point nW = screenToWorld(e.getX(), e.getY());
-		ulX += cW.x - nW.x;
-		ulY += cW.y - nW.y;
-		System.out.println(cW.toString() + "\t"
-			+ screenToWorld(e.getX(), e.getY()).toString());
+		Point2D cW = screenToWorld(e.getX(), e.getY());
+		zoom -= (double) (e.getScrollAmount() * e.getWheelRotation())
+			* .05d * zoom;
+		Point2D nW = screenToWorld(e.getX(), e.getY());
+		ulX += cW.getX() - nW.getX();
+		ulY += cW.getY() - nW.getY();
 		compileBoard();
 		render();
 	    }
@@ -104,12 +103,14 @@ public class BoardViewer extends Canvas {
 	mouseMotionAdapter = new MouseMotionAdapter() {
 	    @Override
 	    public void mouseDragged(MouseEvent e) {
-		if (cacheULX != Integer.MAX_VALUE
-			&& cacheULY != Integer.MAX_VALUE) {
+		if (cacheULX != Double.MAX_VALUE
+			&& cacheULY != Double.MAX_VALUE) {
 		    if (dragStart == null)
 			dragStart = e.getPoint();
-		    ulX = cacheULX + dragStart.x - e.getX();
-		    ulY = cacheULY + dragStart.y - e.getY();
+		    ulX = cacheULX
+			    + ((dragStart.getX() - ((double) e.getX())) / zoom);
+		    ulY = cacheULY
+			    + ((dragStart.getX() - ((double) e.getY())) / zoom);
 		    compileBoard();
 		    render();
 		}
@@ -126,9 +127,9 @@ public class BoardViewer extends Canvas {
 	    @Override
 	    public void keyTyped(KeyEvent e) {
 		if (e.getKeyChar() == 'c') {
-		    Point world = screenToWorld(mouse.x, mouse.y);
-		    ulX = world.x - Math.round(getWidth() / 2f / zoom);
-		    ulY = world.y - Math.round(getHeight() / 2f / zoom);
+		    Point2D world = screenToWorld(mouse.x, mouse.y);
+		    ulX = world.getX() - (getWidth() / 2d / zoom);
+		    ulY = world.getY() - (getHeight() / 2d / zoom);
 		    compileBoard();
 		    render();
 		} else if (e.getKeyChar() == 'x') {
@@ -142,13 +143,15 @@ public class BoardViewer extends Canvas {
     }
 
     public void compileBoard() {
-	board.compile(new Rectangle(-ulX, -ulY, Math.round(getWidth() * zoom),
-		Math.round(getHeight() * zoom)));
+	BigRectangle r = new BigRectangle(-ulX * zoom, -ulY * zoom,
+		Math.round(Math.min(getWidth(), getHeight()) * zoom),
+		Math.round(Math.min(getWidth(), getHeight()) * zoom));
+	board.compile(r);
+	System.out.println(r.toString());
     }
 
-    public Point screenToWorld(float x, float y) {
-	return new Point(Math.round((x / zoom) + ulX), Math.round((y / zoom)
-		+ ulY));
+    public Point2D screenToWorld(double x, double y) {
+	return new Point2D.Double(x / zoom + ulX, y / zoom + ulY);
     }
 
     public void start() {
@@ -161,7 +164,8 @@ public class BoardViewer extends Canvas {
 	addComponentListener(componentAdapter);
 	addKeyListener(keyAdapter);
 	render();
-	transferFocus();
+	requestFocus();
+	requestFocusInWindow();
     }
 
     public void stop() {
@@ -178,7 +182,7 @@ public class BoardViewer extends Canvas {
 	if (buffer != null) {
 	    Graphics2D g = (Graphics2D) buffer.getDrawGraphics();
 	    g.clearRect(0, 0, getWidth(), getHeight());
-	    board.render(g, getBounds());
+	    board.render(g, new BigRectangle(0, 0, getWidth(), getHeight()));
 	    g.setColor(Color.BLACK);
 	    g.drawString("Player: " + currPlayer.name(), 0, 10);
 	    buffer.show();
